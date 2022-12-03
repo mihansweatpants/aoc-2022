@@ -1,15 +1,42 @@
+import java.util.*
+import kotlin.math.max
+
 fun main() {
     fun part1(input: List<String>): Int {
-        return input.size
+        var maxCalories = 0
+        var currentElfCalories = 0
+
+        for (line in input) {
+            if (line.isBlank()) {
+                maxCalories = max(maxCalories, currentElfCalories)
+                currentElfCalories = 0
+            } else {
+                currentElfCalories += line.toInt()
+            }
+        }
+
+        return maxCalories
     }
 
     fun part2(input: List<String>): Int {
-        return input.size
-    }
+        val heap = PriorityQueue<Int>()
 
-    // test if implementation meets criteria from the description, like:
-    val testInput = readInput("Day01_test")
-    check(part1(testInput) == 1)
+        var currentElfCalories = 0
+        for (line in input) {
+            if (line.isNotBlank()) {
+                currentElfCalories += line.toInt()
+            } else {
+                heap.offer(currentElfCalories)
+                currentElfCalories = 0
+            }
+
+            if (heap.size > 3) {
+                heap.poll()
+            }
+        }
+
+        return heap.sum()
+    }
 
     val input = readInput("Day01")
     println(part1(input))
