@@ -1,3 +1,5 @@
+import java.util.LinkedList
+
 fun main() {
     fun part1(input: List<String>): String {
         val (stacks, moves) = parseInput(input)
@@ -5,18 +7,31 @@ fun main() {
         for (move in moves) {
             val fromStack = stacks[move.from]!!
             val toStack = stacks[move.to]!!
+
             repeat(move.amount) {
                 toStack += fromStack.removeLast()
             }
         }
 
-        return stacks.keys.sorted()
-            .filter { stacks[it]?.isNotEmpty() ?: false }
-            .joinToString("") { stacks[it]?.last().toString() }
+        return stacks.topCrates()
     }
 
-    fun part2(input: List<String>): Int {
-        TODO()
+    fun part2(input: List<String>): String {
+        val (stacks, moves) = parseInput(input)
+
+        for (move in moves) {
+            val fromStack = stacks[move.from]!!
+            val toStack = stacks[move.to]!!
+
+            val batchOfCrates = LinkedList<Char>()
+            repeat(move.amount) {
+                batchOfCrates.addFirst(fromStack.removeLast())
+            }
+
+            toStack += batchOfCrates
+        }
+
+        return stacks.topCrates()
     }
 
     val input = readInput("Day05")
@@ -65,3 +80,8 @@ private fun String.parseMove(): Move {
 
     return Move(amount = amount.toInt(), from = from.toInt(), to = to.toInt())
 }
+
+private fun Map<Int, List<Char>>.topCrates() =
+    this.keys.sorted()
+        .filter { this[it]?.isNotEmpty() ?: false }
+        .joinToString("") { this[it]?.last().toString() }
