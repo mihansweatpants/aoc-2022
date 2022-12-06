@@ -32,7 +32,7 @@ fun main() {
         return totalPoints
     }
 
-    val input = readInput("Day02")
+    val input = readInput("Day02").lines()
     println(part1(input))
     println(part2(input))
 }

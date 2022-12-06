@@ -38,7 +38,7 @@ fun main() {
         return heap.sum()
     }
 
-    val input = readInput("Day01")
+    val input = readInput("Day01").lines()
     println(part1(input))
     println(part2(input))
 }

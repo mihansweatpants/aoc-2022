@@ -13,7 +13,7 @@ fun main() {
             .sumOf { it.getPriority() }
     }
 
-    val input = readInput("Day03")
+    val input = readInput("Day03").lines()
     println(part1(input))
     println(part2(input))
 }

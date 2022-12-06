@@ -34,7 +34,7 @@ fun main() {
         return stacks.topCrates()
     }
 
-    val input = readInput("Day05")
+    val input = readInput("Day05").lines()
     println(part1(input))
     println(part2(input))
 }
