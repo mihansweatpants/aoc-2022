@@ -1,52 +1,39 @@
+import kotlin.math.min
+
 private const val PARENT_DIR = ".."
+private const val TOTAL_DISK_SPACE = 70000000
+private const val SPACE_REQUIRED_FOR_UPDATE = 30000000
 
 fun main() {
-    // go through input
-    // keep a pointer to rootDir & parentDir & currentDir
-    // for each command:
-    //      ls:
-    //          for each item in list create a node in current dir
-    //      cd:
-    //          ..: set currentDir to parentDir
-    //           X: set parentDir to currentDir, currentDir = X
-
     fun part1(input: List<String>): Int {
-        val rootDir = Directory("/")
-        var currentDir = rootDir
-
-        for (currentLineIndex in 1..input.indices.last) {
-            val currentLine = input[currentLineIndex]
-
-            when {
-                currentLine.startsWith("$ ls") -> currentDir.ls()
-
-                currentLine.startsWith("$ cd") -> currentDir = currentDir.cd(parseDirName(currentLine))
-
-                else -> currentDir.add(parseNode(currentLine, currentDir))
-            }
-        }
+        val rootDir = buildFilesystemTree(input)
 
         var sum = 0
 
-        val queue = ArrayDeque<Directory>()
-        queue.add(rootDir)
-
-        while (queue.isNotEmpty()) {
-            val currDir = queue.removeFirst()
-            val currDirSize = currDir.size
-            if (currDirSize <= 100_000) {
-                sum += currDirSize
+        rootDir.walkTree {
+            val dirSize = it.size
+            if (dirSize <= 100_000) {
+                sum += dirSize
             }
-            currDir.children
-                .filterIsInstance<Directory>()
-                .forEach(queue::addLast)
         }
 
         return sum
     }
 
     fun part2(input: List<String>): Int {
-        return input.size
+        val rootDir = buildFilesystemTree(input)
+        val totalFreeSpace = TOTAL_DISK_SPACE - rootDir.size
+
+        var minSizeToDelete = rootDir.size
+
+        rootDir.walkTree {
+            val dirSize = it.size
+            if (totalFreeSpace + dirSize >= SPACE_REQUIRED_FOR_UPDATE) {
+                minSizeToDelete = min(minSizeToDelete, dirSize)
+            }
+        }
+
+        return minSizeToDelete
     }
 
     val input = readInput("Day07").lines()
@@ -62,7 +49,7 @@ interface Node {
 class Directory(
     override val name: String,
     private val parent: Directory? = null,
-    val children: MutableList<Node> = mutableListOf(),
+    private val children: MutableList<Node> = mutableListOf(),
 ) : Node {
     override val size: Int
         get() = children.sumOf { it.size }
@@ -96,6 +83,21 @@ class Directory(
         println("Enumerating $node in $this")
         children.add(node)
     }
+
+    fun walkTree(callback: (dir: Directory) -> Unit) {
+        val queue = ArrayDeque<Directory>()
+        queue.add(this)
+
+        while (queue.isNotEmpty()) {
+            val currDir = queue.removeFirst()
+
+            callback(currDir)
+
+            currDir.children
+                .filterIsInstance<Directory>()
+                .forEach(queue::addLast)
+        }
+    }
 }
 
 class File(
@@ -105,6 +107,33 @@ class File(
     override fun toString(): String {
         return "$name (file, size=$size)"
     }
+}
+
+// go through input
+// keep a pointer to rootDir & parentDir & currentDir
+// for each command:
+//      ls:
+//          for each item in list create a node in current dir
+//      cd:
+//          ..: set currentDir to parentDir
+//           X: set parentDir to currentDir, currentDir = X
+fun buildFilesystemTree(input: List<String>): Directory {
+    val rootDir = Directory("/")
+    var currentDir = rootDir
+
+    for (currentLineIndex in 1..input.indices.last) {
+        val currentLine = input[currentLineIndex]
+
+        when {
+            currentLine.startsWith("$ ls") -> currentDir.ls()
+
+            currentLine.startsWith("$ cd") -> currentDir = currentDir.cd(parseDirName(currentLine))
+
+            else -> currentDir.add(parseNode(currentLine, currentDir))
+        }
+    }
+
+    return rootDir
 }
 
 fun parseNode(line: String, parent: Directory): Node {
