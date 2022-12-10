@@ -3,26 +3,41 @@ import kotlin.math.abs
 
 fun main() {
     fun part1(moves: List<RopeMove>): Int {
-        val visitedPositions = mutableSetOf<RopePosition>()
+        val visitedPositions = mutableSetOf<KnotPosition>()
 
-        var headRopePosition = RopePosition(0, 0)
-        var tailRopePosition = RopePosition(0, 0)
+        var headKnotPosition = KnotPosition(0, 0)
+        var tailKnotPosition = KnotPosition(0, 0)
 
-        visitedPositions.add(tailRopePosition)
+        visitedPositions.add(tailKnotPosition)
 
         for ((direction, steps) in moves) {
             repeat(steps) {
-                headRopePosition = headRopePosition.move(direction)
-                tailRopePosition = tailRopePosition.catchUp(headRopePosition)
-                visitedPositions.add(tailRopePosition)
+                headKnotPosition = headKnotPosition.move(direction)
+                tailKnotPosition = tailKnotPosition.catchUp(headKnotPosition)
+                visitedPositions.add(tailKnotPosition)
             }
         }
 
         return visitedPositions.size
     }
 
-    fun part2(input: List<RopeMove>): Int {
-        return input.size
+    fun part2(moves: List<RopeMove>): Int {
+        val visitedPositions = mutableSetOf<KnotPosition>()
+
+        val rope = Array(10) { KnotPosition(0, 0) }
+        visitedPositions.add(rope.last())
+
+        for ((direction, steps) in moves) {
+            repeat(steps) {
+                rope[0] = rope[0].move(direction)
+                for (i in 1..rope.lastIndex) {
+                    rope[i] = rope[i].catchUp(rope[i - 1])
+                }
+                visitedPositions.add(rope.last())
+            }
+        }
+
+        return visitedPositions.size
     }
 
     val input = readInput("Day09")
@@ -39,11 +54,11 @@ private data class RopeMove(
     val steps: Int
 )
 
-private data class RopePosition(
+private data class KnotPosition(
     val x: Int,
     val y: Int
 ) {
-    fun move(direction: String, steps: Int = 1): RopePosition {
+    fun move(direction: String, steps: Int = 1): KnotPosition {
         return when (direction) {
             "U" -> this.copy(y = y + steps)
             "D" -> this.copy(y = y - steps)
@@ -53,7 +68,7 @@ private data class RopePosition(
         }
     }
 
-    fun catchUp(other: RopePosition): RopePosition {
+    fun catchUp(other: KnotPosition): KnotPosition {
         val xDiff = abs(this.x - other.x)
         val yDiff = abs(this.y - other.y)
 
@@ -76,23 +91,20 @@ private data class RopePosition(
         return newPosition
     }
 
-    fun catchUpDiagonally(other: RopePosition): List<RopeMove> {
-        val toX = catchUpHorizontally(other)
-        val toY = catchUpVertically(other)
-        return if (toX.steps < toY.steps) {
-            listOf(
-                toX.copy(steps = toX.steps + 1),
-                toY
-            )
-        } else {
-            listOf(
-                toX,
-                toY.copy(steps = toY.steps + 1)
-            )
+    fun catchUpDiagonally(other: KnotPosition): List<RopeMove> {
+        var toX = catchUpHorizontally(other)
+        var toY = catchUpVertically(other)
+
+        if (toX.steps < toY.steps) {
+            toX = toX.copy(steps = toX.steps + 1)
+        } else if (toX.steps > toY.steps) {
+            toY = toY.copy(steps = toY.steps + 1)
         }
+
+        return listOf(toX, toY)
     }
 
-    fun catchUpHorizontally(other: RopePosition): RopeMove {
+    fun catchUpHorizontally(other: KnotPosition): RopeMove {
         val direction = if (other.x > this.x) "R" else "L"
         var distance = abs(this.x - other.x)
         if (distance > 0) distance -= 1
@@ -100,7 +112,7 @@ private data class RopePosition(
         return RopeMove(direction, distance)
     }
 
-    fun catchUpVertically(other: RopePosition): RopeMove {
+    fun catchUpVertically(other: KnotPosition): RopeMove {
         val direction = if (other.y > this.y) "U" else "D"
         var distance = abs(this.y - other.y)
         if (distance > 0) distance -= 1
