@@ -1,4 +1,5 @@
 import java.lang.IllegalStateException
+import kotlin.math.abs
 
 fun main() {
     fun part1(instructions: List<CPUInstruction>): Int {
@@ -24,8 +25,40 @@ fun main() {
         return sumOfInterestingSignalStrengths
     }
 
-    fun part2(instructions: List<CPUInstruction>): Int {
-        return 0
+    fun part2(instructions: List<CPUInstruction>): String {
+        val crtRows = mutableListOf<List<String>>()
+
+        var register = 1
+        var currentCycle = 0
+
+        var currentCrtRow = mutableListOf<String>()
+        for (instruction in instructions) {
+            repeat(instruction.cyclesToComplete) {
+                val currentPixel = currentCrtRow.size
+                if (abs(register - currentPixel) <= 1) {
+                    currentCrtRow.add("#")
+                } else {
+                    currentCrtRow.add(".")
+                }
+
+                if (currentCrtRow.size == 40) {
+                    crtRows.add(currentCrtRow)
+                    currentCrtRow = mutableListOf()
+                }
+
+                currentCycle++
+            }
+
+            when (instruction.operator) {
+                "addx" -> register += instruction.argument
+            }
+        }
+
+        return crtRows.joinToString("\n") {
+            it.joinToString()
+                .replace(".", " ")
+                .replace(",", " ")
+        }
     }
 
     val input = readInput("Day10")
@@ -41,7 +74,7 @@ private class CPUInstruction(
     val argument: Int = 0
 ) {
     val cyclesToComplete: Int
-        get() = when(operator) {
+        get() = when (operator) {
             "addx" -> 2
             "noop" -> 1
             else -> throw IllegalStateException("Unknown operator $operator")
