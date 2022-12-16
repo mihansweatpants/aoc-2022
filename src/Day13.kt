@@ -1,6 +1,5 @@
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.*
-import java.lang.RuntimeException
 
 fun main() {
     fun part1(input: String): Int {
@@ -15,9 +14,38 @@ fun main() {
             .sum()
     }
 
+    fun part2(input: String): Int {
+        val dividerPackets = setOf(
+            Packet(Json.decodeFromString("[[2]]")),
+            Packet(Json.decodeFromString("[[6]]"))
+        )
+
+        val packets = mutableListOf<Packet>().apply {
+            addAll(dividerPackets)
+        }
+
+        input.lines()
+            .filterNot { it.isBlank() }
+            .mapTo(packets) { Packet(Json.decodeFromString(it)) }
+
+        packets.sort()
+
+        return dividerPackets
+            .map { packets.indexOf(it) + 1 }
+            .reduce(Int::times)
+    }
+
     val input = readInput("Day13")
 
-    println(part1(input))
+    part1(input).also {
+        check(it == 5198)
+        println(it)
+    }
+
+    part2(input).also {
+        check(it == 22344)
+        println(it)
+    }
 }
 
 private data class Packet(
@@ -46,9 +74,7 @@ private data class Packet(
                     index++
                 }
 
-                if (left.size > right.size) return 1
-
-                return -1
+                return left.size - right.size
             }
 
             else -> throw RuntimeException("Left is ${left.javaClass} and right is ${right.javaClass}. What do i do???")
